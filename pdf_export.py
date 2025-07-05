@@ -1,39 +1,46 @@
 from fpdf import FPDF
-import os
 from datetime import datetime
+import os
 
-def teklif_pdf_olustur(teklif_icerik, musteri_adi):
-    pdf = FPDF()
+class PDF(FPDF):
+    def header(self):
+        self.set_font("Arial", "B", 12)
+        self.cell(0, 10, "TEKLİF / SİPARİŞ BELGESİ", ln=True, align="C")
+        self.ln(10)
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font("Arial", "I", 8)
+        self.cell(0, 10, f"Sayfa {self.page_no()}", align="C")
+
+def teklif_pdf_olustur(teklif_metin, musteri_adi):
+    tarih = datetime.now().strftime("%Y-%m-%d %H:%M")
+    dosya_adi = f"Teklif_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+
+    pdf = PDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Arial", size=11)
 
-    pdf.cell(200, 10, txt="TEKLİF FORMU", ln=1, align="C")
-    pdf.cell(200, 10, txt=f"Müşteri: {musteri_adi}", ln=2, align="L")
+    pdf.cell(0, 10, f"Müşteri: {musteri_adi}", ln=True)
+    pdf.cell(0, 10, f"Tarih: {tarih}", ln=True)
     pdf.ln(10)
+    pdf.multi_cell(0, 10, teklif_metin)
 
-    for satir in teklif_icerik.split("\n"):
-        pdf.cell(200, 8, txt=satir.encode('latin-1', 'replace').decode('latin-1'), ln=1)
-
-    klasor = "pdfler"
-    os.makedirs(klasor, exist_ok=True)
-    dosya_adi = os.path.join(klasor, f"teklif_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf")
     pdf.output(dosya_adi)
     return dosya_adi
 
-def siparis_pdf_olustur(siparis_icerik, tedarikci_adi):
-    pdf = FPDF()
+def siparis_pdf_olustur(siparis_metin, tedarikci_adi):
+    tarih = datetime.now().strftime("%Y-%m-%d %H:%M")
+    dosya_adi = f"Siparis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+
+    pdf = PDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Arial", size=11)
 
-    pdf.cell(200, 10, txt="SİPARİŞ FORMU", ln=1, align="C")
-    pdf.cell(200, 10, txt=f"Tedarikçi: {tedarikci_adi}", ln=2, align="L")
+    pdf.cell(0, 10, f"Tedarikçi: {tedarikci_adi}", ln=True)
+    pdf.cell(0, 10, f"Tarih: {tarih}", ln=True)
     pdf.ln(10)
+    pdf.multi_cell(0, 10, siparis_metin)
 
-    for satir in siparis_icerik.split("\n"):
-        pdf.cell(200, 8, txt=satir.encode('latin-1', 'replace').decode('latin-1'), ln=1)
-
-    klasor = "pdfler"
-    os.makedirs(klasor, exist_ok=True)
-    dosya_adi = os.path.join(klasor, f"siparis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf")
     pdf.output(dosya_adi)
     return dosya_adi
