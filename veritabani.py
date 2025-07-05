@@ -1,37 +1,75 @@
 import sqlite3
-from datetime import datetime
 
-class Veritabani:
-    def __init__(self):
-        self.baglanti = sqlite3.connect("veritabani.db")
-        self.imlec = self.baglanti.cursor()
-        self.tablo_olustur()
+# Veritabanı bağlantısı
+def veritabani_baglan():
+    conn = sqlite3.connect("veri.db")
+    return conn
 
-    def tablo_olustur(self):
-        self.imlec.execute("""
-            CREATE TABLE IF NOT EXISTS musteriler (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ad TEXT NOT NULL,
-                tarih TEXT DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        self.baglanti.commit()
+# Veritabanı tablolarını oluştur
+def tablo_olustur():
+    conn = veritabani_baglan()
+    cursor = conn.cursor()
 
-    def musteri_ekle(self, ad):
-        self.imlec.execute("INSERT INTO musteriler (ad, tarih) VALUES (?, ?)", (ad, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-        self.baglanti.commit()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS musteriler (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ad TEXT NOT NULL,
+            telefon TEXT,
+            adres TEXT
+        )
+    """)
 
-    def musteri_guncelle(self, musteri_id, yeni_ad):
-        self.imlec.execute("UPDATE musteriler SET ad=? WHERE id=?", (yeni_ad, musteri_id))
-        self.baglanti.commit()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS teklifler (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            musteri_id INTEGER,
+            icerik TEXT,
+            tarih TEXT,
+            FOREIGN KEY(musteri_id) REFERENCES musteriler(id)
+        )
+    """)
 
-    def musteri_sil(self, musteri_id):
-        self.imlec.execute("DELETE FROM musteriler WHERE id=?", (musteri_id,))
-        self.baglanti.commit()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS siparisler (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tedarikci TEXT,
+            icerik TEXT,
+            tarih TEXT
+        )
+    """)
 
-    def musteri_listele(self):
-        self.imlec.execute("SELECT id, ad FROM musteriler ORDER BY tarih DESC")
-        return self.imlec.fetchall()
+    conn.commit()
+    conn.close()
 
-    def kapat(self):
-        self.baglanti.close()
+# Müşteri ekle
+def musteri_ekle(ad, telefon, adres):
+    conn = veritabani_baglan()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO musteriler (ad, telefon, adres) VALUES (?, ?, ?)", (ad, telefon, adres))
+    conn.commit()
+    conn.close()
+
+# Müşteri listesini getir
+def musteri_listele():
+    conn = veritabani_baglan()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM musteriler")
+    sonuc = cursor.fetchall()
+    conn.close()
+    return sonuc
+
+# Müşteri güncelle
+def musteri_guncelle(id, yeni_ad, yeni_telefon, yeni_adres):
+    conn = veritabani_baglan()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE musteriler SET ad=?, telefon=?, adres=? WHERE id=?", (yeni_ad, yeni_telefon, yeni_adres, id))
+    conn.commit()
+    conn.close()
+
+# Müşteri sil
+def musteri_sil(id):
+    conn = veritabani_baglan()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM musteriler WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
