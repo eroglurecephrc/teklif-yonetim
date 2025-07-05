@@ -3,26 +3,24 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 
 def get_tcmb_kurlar():
-    today = datetime.now().strftime("%d/%m/%Y")
-    url = "https://www.tcmb.gov.tr/kurlar/today.xml"
-
     try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        xml_data = ET.fromstring(response.content)
+        url = "https://www.tcmb.gov.tr/kurlar/today.xml"
+        response = requests.get(url)
+        response.encoding = "utf-8"
+        tree = ET.ElementTree(ET.fromstring(response.text))
+        root = tree.getroot()
 
-        dolar = xml_data.find("Currency[@Kod='USD']/BanknoteSelling").text
-        euro = xml_data.find("Currency[@Kod='EUR']/BanknoteSelling").text
+        kurlar = {}
+        for currency in root.findall("Currency"):
+            kod = currency.get("CurrencyCode")
+            if kod in ["USD", "EUR", "GBP"]:
+                try:
+                    kur = currency.find("ForexSelling").text.replace(",", ".")
+                    kurlar[kod] = float(kur)
+                except:
+                    continue
 
-        return {
-            "Tarih": today,
-            "Dolar": f"{float(dolar):.2f} TL",
-            "Euro": f"{float(euro):.2f} TL"
-        }
+        return kurlar
     except Exception as e:
-        return {
-            "Hata": str(e),
-            "Tarih": today,
-            "Dolar": "--",
-            "Euro": "--"
-        }
+        print(f"TCMB kurlarını alırken hata oluştu: {e}")
+        return {}
